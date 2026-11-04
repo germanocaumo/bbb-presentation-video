@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, List, TypeVar
+from typing import Callable, Dict, List, TypeVar
 
 import cairo
 from packaging.version import Version
@@ -121,6 +121,13 @@ HIGHLIGHT_COLORS: Dict[ColorStyle, Color] = {
     ColorStyle.YELLOW: Color.from_int(0xFDDD00),
 }
 
+# Since BigBlueButton 3.1, the client also replaces the black and yellow highlighter
+# colors (setupColorThemePaletteOverrides in the whiteboard).
+HIGHLIGHT_COLORS_OVERRIDE_V3_1: Dict[ColorStyle, Color] = {
+    ColorStyle.BLACK: Color.from_int(0xFFFF00),
+    ColorStyle.YELLOW: Color.from_int(0xFFFF00),
+}
+
 # From tldraw editor/editor.css
 FRAME_HEADING_FONT_SIZE: float = 12
 FRAME_HEADING_PADDING: float = 8  # var(--space3)
@@ -140,6 +147,31 @@ def apply_palette_overrides(bbb_version: Version) -> None:
     """Apply the changes BigBlueButton makes to the tldraw color palette."""
     if bbb_version >= Version("3.1"):
         COLORS.update(COLORS_OVERRIDE_V3_1)
+        HIGHLIGHT_COLORS.update(HIGHLIGHT_COLORS_OVERRIDE_V3_1)
+
+
+def rng(seed: str) -> Callable[[], float]:
+    """Seeded random number generator from tldraw utils/number.ts.
+
+    Returns numbers from -1 to 1, in the same sequence as the client for the same seed.
+    """
+    x = y = z = w = 0
+
+    def next_value() -> float:
+        nonlocal x, y, z, w
+        t = (x ^ (x << 11)) & 0xFFFFFFFF
+        x, y, z = y, z, w
+        w ^= (w >> 19) ^ t ^ (t >> 8)
+        # The JavaScript result is a signed 32-bit integer
+        return (w - 0x100000000 if w & 0x80000000 else w) / 0x100000000 * 2
+
+    for c in seed:
+        x ^= ord(c)
+        next_value()
+    for _ in range(64):
+        next_value()
+
+    return next_value
 
 
 def pattern_fill(color: ColorStyle) -> cairo.SurfacePattern:

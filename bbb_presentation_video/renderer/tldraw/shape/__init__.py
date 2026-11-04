@@ -227,6 +227,8 @@ class HighlighterShape(RotatableShapeProto):
     """List of input points from the drawing tool."""
     isComplete: bool = False
     """Whether the last point in the line is present (pen lifted)."""
+    is_pen: bool = False
+    """Whether the shape was drawn with a pen (stylus)."""
 
     def update_from_data(self, data: ShapeData) -> None:
         super().update_from_data(data)
@@ -250,6 +252,9 @@ class HighlighterShape(RotatableShapeProto):
             self.isComplete = data["isComplete"]
         elif "props" in data and "isComplete" in data["props"]:
             self.isComplete = data["props"]["isComplete"]
+
+        if "props" in data and "isPen" in data["props"]:
+            self.is_pen = data["props"]["isPen"]
 
 
 @attr.s(order=False, slots=True, auto_attribs=True)

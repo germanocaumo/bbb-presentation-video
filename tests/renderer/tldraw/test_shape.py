@@ -10,7 +10,6 @@ from bbb_presentation_video.renderer.tldraw.shape import (
     TextShapeV2,
 )
 from bbb_presentation_video.renderer.tldraw.utils import (
-    HIGHLIGHT_COLORS,
     AlignStyle,
     ColorStyle,
     DashStyle,
@@ -433,6 +432,10 @@ def test_highlight_from_data() -> None:
 
     highlight = HighlighterShape.from_data(data)
     assert highlight.style == Style(size=SizeStyle.XL, color=ColorStyle.RED)
+    assert not highlight.is_pen
 
     assert highlight.point == Position(354, 140)
     assert highlight.rotation == 0
+
+    highlight.update_from_data({"props": {"isPen": True}})
+    assert highlight.is_pen
