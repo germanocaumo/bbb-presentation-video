@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Dict, List, TypeVar
 
 import cairo
+from packaging.version import Version
 
 from bbb_presentation_video.events.helpers import Color, Position
 from bbb_presentation_video.renderer.tldraw import vec
@@ -68,6 +69,13 @@ COLORS: Dict[ColorStyle, Color] = {
     ColorStyle.VIOLET: Color.from_int(0xAE3EC9),
     ColorStyle.YELLOW: Color.from_int(0xFFC078),
 }
+
+# Since BigBlueButton 3.1 (released as 4.0), the client replaces the tldraw yellow
+# with a more vibrant one (setupColorThemePaletteOverrides in the whiteboard).
+COLORS_OVERRIDE_V3_1: Dict[ColorStyle, Color] = {
+    ColorStyle.YELLOW: Color.from_int(0xFFFF00),
+}
+
 SEMI_COLORS: Dict[ColorStyle, Color] = {
     ColorStyle.BLACK: Color.from_int(0xE8E8E8),
     ColorStyle.BLUE: Color.from_int(0xDCE1F8),
@@ -125,6 +133,12 @@ NOTE_PADDING: float = 17
 
 
 CairoSomeSurface = TypeVar("CairoSomeSurface", bound=cairo.Surface)
+
+
+def apply_palette_overrides(bbb_version: Version) -> None:
+    """Apply the changes BigBlueButton makes to the tldraw color palette."""
+    if bbb_version >= Version("3.1"):
+        COLORS.update(COLORS_OVERRIDE_V3_1)
 
 
 def pattern_fill(color: ColorStyle) -> cairo.SurfacePattern:
